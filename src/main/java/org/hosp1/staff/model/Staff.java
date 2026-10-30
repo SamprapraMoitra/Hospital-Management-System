@@ -15,11 +15,13 @@ public class Staff extends User {
         super();
     }
     public Staff(int userId, String name, String email, String phone, String gender,String address,String passwordHash,
-                   int staffId, LocalDate joiningDate, String designation) {
+                   int staffId, LocalDate joiningDate, String designation,double salary,String qualification) {
         super(userId, name, email, phone, gender,passwordHash);
         this.staffId = staffId;
         this.joiningDate = joiningDate;
         this.designation = designation;
+        this.salary = salary;
+        this.qualification = qualification;
     }
 
     public int getStaffId() {
