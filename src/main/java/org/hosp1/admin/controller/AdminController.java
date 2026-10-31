@@ -21,21 +21,24 @@ public class AdminController {
     private final Admin admin;
     private final Runnable onLogout;
     private final Runnable onOpenBilling;
+    private final Runnable onOpenFacility;
 
     public AdminController(AdminView view, StaffRepository staffRepo, PatientRepository patientRepo,
-                           Admin admin, Runnable onLogout, Runnable onOpenBilling) {
+                           Admin admin, Runnable onLogout, Runnable onOpenBilling, Runnable onOpenFacility) {
         this.view = view;
         this.staffRepo = staffRepo;
         this.patientRepo = patientRepo;
         this.admin = admin;
         this.onLogout = onLogout;
         this.onOpenBilling = onOpenBilling;
+        this.onOpenFacility = onOpenFacility;
 
         view.setAddStaffAction(this::addDoctor);
         view.setRemoveStaffAction(this::removeStaff);
         view.setRefreshAction(this::refresh);
         view.setLogoutAction(this::logout);
         view.setBillingAction(onOpenBilling);
+        view.setFacilityAction(onOpenFacility);
 
     }
 

@@ -40,5 +40,7 @@ public interface AdminView {
     void setRefreshAction(Runnable action);
     void setLogoutAction(Runnable action);
     void setBillingAction(Runnable action);
+    void setFacilityAction(Runnable action);
+
 
 }

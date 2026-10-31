@@ -39,6 +39,7 @@ public class SwingAdminView implements AdminView {
     private final JButton refreshButton = new JButton("Refresh");
     private final JButton logoutButton = new JButton("Logout");
     private final JButton billingButton = new JButton("Billing");
+    private final JButton facilityButton = new JButton("Facilities");
 
     private final List<String> staffIds = new ArrayList<>(); // row index -> staff id
 
@@ -53,6 +54,8 @@ public class SwingAdminView implements AdminView {
         top.setBorder(BorderFactory.createEmptyBorder(6, 10, 6, 10));
         top.add(welcome, BorderLayout.WEST);
         JPanel topButtons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
+
+        topButtons.add(facilityButton);
         topButtons.add(billingButton);
         topButtons.add(refreshButton);
         topButtons.add(logoutButton);
@@ -199,4 +202,5 @@ public class SwingAdminView implements AdminView {
     @Override public void setBillingAction(Runnable a) {
         billingButton.addActionListener(e -> a.run());
     }
+    @Override public void setFacilityAction(Runnable a) { facilityButton.addActionListener(e -> a.run()); }
 }
