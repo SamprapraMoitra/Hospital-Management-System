@@ -15,9 +15,9 @@ public class Patient extends User {
         super();
     }
 
-    public Patient(int userId, String name, String email, String phone, String gender,String address,String passwordHash,
+    public Patient(String userId, String name, String email, String phone, String gender,String address,String role,String passwordHash,
                    int patientId, LocalDate dob,  String bloodGroup) {
-        super(userId, name, email, phone, gender,address,passwordHash);
+        super(userId, name, email, phone, gender,address,role,passwordHash);
         this.patientId = patientId;
         this.dob = dob;
         this.bloodGroup = bloodGroup;

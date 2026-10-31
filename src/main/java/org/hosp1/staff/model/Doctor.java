@@ -9,9 +9,9 @@ public class Doctor extends Staff {
     public Doctor() {
         super();
     }
-    public Doctor(int userId, String name, String email, String phone, String gender,String address,String passwordHash,
-                 int staffId, LocalDate joiningDate, String designation,String specialization,String licenseNo) {
-        super(userId, name, email, phone, gender,passwordHash,staffId,joiningDate,designation);
+    public Doctor(String userId, String name, String email, String phone, String gender,String address,String role,String passwordHash,
+                 int staffId, LocalDate joiningDate, String designation,double salary,String qualification,String specialization,String licenseNo) {
+        super(userId, name, email, phone, gender,address,role,passwordHash,staffId,joiningDate,designation,salary,qualification);
         this.specialization = specialization;
         this.licenseNo = licenseNo;
 
@@ -34,6 +34,6 @@ public class Doctor extends Staff {
     }
     @Override
     public String toString() {
-        return "Doctor{staffId=" + getstaffId() + ", name='" + getName() + "', specialization='" + specialization + "'}";
+        return "Doctor{staffId=" + getStaffId() + ", name='" + getName() + "', specialization='" + specialization + "'}";
     }
 }

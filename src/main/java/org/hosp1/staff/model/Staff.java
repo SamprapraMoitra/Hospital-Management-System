@@ -14,9 +14,9 @@ public class Staff extends User {
     public Staff() {
         super();
     }
-    public Staff(int userId, String name, String email, String phone, String gender,String address,String passwordHash,
+    public Staff(String userId, String name, String email, String phone, String gender,String address,String role,String passwordHash,
                    int staffId, LocalDate joiningDate, String designation,double salary,String qualification) {
-        super(userId, name, email, phone, gender,passwordHash);
+        super(userId, name, email, phone, gender,address,role,passwordHash);
         this.staffId = staffId;
         this.joiningDate = joiningDate;
         this.designation = designation;

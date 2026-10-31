@@ -4,31 +4,33 @@ import java.util.Objects;
 
 public abstract class User {
 
-    private int userId;
+    private String userId;
     private String name;
     private String email;
     private String phone;
     private String gender;
     private String address;
+    private String role;
     private String passwordHash;
 
     protected User() {
     }
 
-    protected User(int userId, String name, String email, String phone,String gender,String address, String passwordHash) {
+    protected User(String userId, String name, String email, String phone,String gender,String address,String role, String passwordHash) {
         this.userId = userId;
         this.name = name;
         this.email = email;
         this.phone = phone;
         this.gender = gender;
         this.address = address;
+        this.role = role;
         this.passwordHash = passwordHash;
     }
 
-    public int getUserId() {
+    public String getUserId() {
         return userId;
     }
-    public void setUserId(int userId) {
+    public void setUserId(String userId) {
         this.userId = userId;
     }
 

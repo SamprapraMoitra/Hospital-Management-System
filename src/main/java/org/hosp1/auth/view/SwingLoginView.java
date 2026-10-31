@@ -13,14 +13,7 @@ import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.WindowConstants;
 
-/**
- * Swing implementation of LoginView.
- * Only builds the window, reads fields and shows messages.
- * No password checking, no user lookup: that is AuthController's job.
- *
- * Create it on the Swing thread:
- *   SwingUtilities.invokeLater(() -> new SwingLoginView());
- */
+
 public class SwingLoginView extends JFrame implements LoginView {
 
     private final JTextField emailField = new JTextField(20);
