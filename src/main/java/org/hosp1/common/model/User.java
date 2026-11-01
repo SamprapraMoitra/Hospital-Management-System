@@ -70,6 +70,14 @@ public abstract class User {
         this.address = address;
     }
 
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
+    }
+
     public String getPasswordHash() {
         return passwordHash;
     }

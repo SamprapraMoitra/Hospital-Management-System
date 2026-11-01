@@ -54,24 +54,11 @@ public class DoctorView extends JPanel {
     private final JTextField reportTitle = UiStyle.textField(20);
     private final JTextArea reportContent = new JTextArea(5, 30);
 
-    private final JTextField billingPatient = UiStyle.textField(15);
-    private final JTextField billingDescription = UiStyle.textField(20);
-    private final JTextField billingAmount = UiStyle.textField(15);
-
-    private final JTextField facilityPatient = UiStyle.textField(15);
-    private final JComboBox<String> roomType = new JComboBox<>(
-            new String[]{
-                    "General", "Semi-private",
-                    "Private", "ICU", "Emergency"
-            }
-    );
-    private final JTextArea facilityReason = new JTextArea(4, 25);
-
     private final JLabel status = new JLabel(
             "Doctor workspace ready."
     );
 
-    public SwingDoctorWorkspaceView(UiActionListener listener) {
+    public DoctorView(UiActionListener listener) {
 
         this.listener = listener;
 
@@ -88,8 +75,6 @@ public class DoctorView extends JPanel {
         tabs.addTab("Prescription", prescriptionPanel());
         tabs.addTab("Availability", availabilityPanel());
         tabs.addTab("Treatment Reports", reportPanel());
-        tabs.addTab("Billing", billingPanel());
-        tabs.addTab("Room / Facility", facilityPanel());
 
         add(tabs, BorderLayout.CENTER);
 
@@ -128,20 +113,6 @@ public class DoctorView extends JPanel {
         doctor.add(new JLabel("Doctor ID:"));
         doctor.add(doctorId);
 
-        JButton setDoctor = UiStyle.primaryButton("Set Doctor ID");
-
-        setDoctor.addActionListener(e -> {
-            if (doctorId.getText().trim().isEmpty()) {
-                message("Enter your Doctor ID.");
-                return;
-            }
-
-            status.setText(
-                    "Current Doctor: " + doctorId.getText().trim()
-            );
-        });
-
-        doctor.add(setDoctor);
         panel.add(doctor);
 
         return panel;
@@ -474,110 +445,6 @@ public class DoctorView extends JPanel {
         return panel;
     }
 
-    // ---------------- BILLING PANEL ----------------
-
-    private JPanel billingPanel() {
-
-        JPanel panel = UiStyle.card();
-
-        JPanel form = new JPanel(new GridLayout(0, 2, 12, 12));
-        form.setOpaque(false);
-
-        form.add(UiStyle.labeledField("Patient ID *", billingPatient));
-        form.add(UiStyle.labeledField("Charge Description *", billingDescription));
-        form.add(UiStyle.labeledField("Amount (Rs.) *", billingAmount));
-
-        JButton request = UiStyle.primaryButton("Submit Billing Request");
-
-        request.addActionListener(e -> {
-
-            if (!validateDoctorId()
-                    || billingPatient.getText().trim().isEmpty()
-                    || billingDescription.getText().trim().isEmpty()
-                    || billingAmount.getText().trim().isEmpty()) {
-
-                message("Complete all billing fields.");
-                return;
-            }
-
-            try {
-                double amount = Double.parseDouble(
-                        billingAmount.getText().trim()
-                );
-
-                if (!Double.isFinite(amount) || amount < 0) {
-                    message("Enter a valid non-negative amount.");
-                    return;
-                }
-
-            } catch (NumberFormatException ex) {
-                message("Enter a valid billing amount.");
-                return;
-            }
-
-            UiActions.send(listener,
-                    "doctorWorkspace.billingRequest",
-                    UiActions.data(
-                            "doctorId", doctorId.getText().trim(),
-                            "patientId", billingPatient.getText().trim(),
-                            "description", billingDescription.getText().trim(),
-                            "amount", billingAmount.getText().trim()
-                    )
-            );
-        });
-
-        form.add(request);
-        panel.add(form, BorderLayout.NORTH);
-
-        return panel;
-    }
-
-    // ---------------- FACILITY PANEL ----------------
-
-    private JPanel facilityPanel() {
-
-        JPanel panel = UiStyle.card();
-
-        JPanel form = new JPanel(new GridLayout(0, 2, 12, 12));
-        form.setOpaque(false);
-
-        form.add(UiStyle.labeledField("Patient ID *", facilityPatient));
-        form.add(UiStyle.labeledField("Room Type", roomType));
-
-        form.add(UiStyle.labeledField(
-                "Reason for Request",
-                new JScrollPane(facilityReason)
-        ));
-
-        JButton request = UiStyle.primaryButton("Request Facility");
-
-        request.addActionListener(e -> {
-
-            if (!validateDoctorId()
-                    || facilityPatient.getText().trim().isEmpty()
-                    || facilityReason.getText().trim().isEmpty()) {
-
-                message("Enter Doctor ID, Patient ID and reason.");
-                return;
-            }
-
-            UiActions.send(listener,
-                    "doctorWorkspace.facilityRequest",
-                    UiActions.data(
-                            "doctorId", doctorId.getText().trim(),
-                            "patientId", facilityPatient.getText().trim(),
-                            "roomType", roomType.getSelectedItem(),
-                            "reason", facilityReason.getText().trim()
-                    )
-            );
-        });
-
-        form.add(request);
-        panel.add(form, BorderLayout.NORTH);
-
-        return panel;
-    }
-
     // ---------------- COMMON METHODS ----------------
 
     private boolean validateDoctorId() {
@@ -684,5 +551,10 @@ public class DoctorView extends JPanel {
 
     public void setStatus(String text) {
         status.setText(text);
+    }
+
+    public void setDoctorIdentity(String id) {
+        doctorId.setText(id);
+        doctorId.setEditable(false);
     }
 }

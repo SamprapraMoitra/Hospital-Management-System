@@ -1,6 +1,13 @@
 
 package org.hosp1.patients.model;
 
+import org.hosp1.billing.model.BillRepository;
+import org.hosp1.facility.model.RoomAllocationRepository;
+import org.hosp1.facility.model.RoomRepository;
+import org.hosp1.staff.model.Doctor;
+import org.hosp1.staff.model.DoctorWorkspaceModel;
+import org.hosp1.staff.model.StaffRepository;
+
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -185,6 +192,11 @@ public class PatientPortalModel {
     private final List<Bill> bills = new ArrayList<>();
     private final List<RoomInfo> rooms = new ArrayList<>();
     private final List<Feedback> feedbacks = new ArrayList<>();
+    private final StaffRepository staffRepository;
+    private final DoctorWorkspaceModel doctorWorkspaceModel;
+    private final BillRepository billRepository;
+    private final RoomRepository roomRepository;
+    private final RoomAllocationRepository allocationRepository;
 
     private int appointmentCounter = 1;
     private int feedbackCounter = 1;
@@ -192,7 +204,24 @@ public class PatientPortalModel {
     // ---------------- CONSTRUCTOR ----------------
 
     public PatientPortalModel() {
+        staffRepository = null;
+        doctorWorkspaceModel = null;
+        billRepository = null;
+        roomRepository = null;
+        allocationRepository = null;
         loadSampleData();
+    }
+
+    public PatientPortalModel(StaffRepository staffRepository,
+                              DoctorWorkspaceModel doctorWorkspaceModel,
+                              BillRepository billRepository,
+                              RoomRepository roomRepository,
+                              RoomAllocationRepository allocationRepository) {
+        this.staffRepository = staffRepository;
+        this.doctorWorkspaceModel = doctorWorkspaceModel;
+        this.billRepository = billRepository;
+        this.roomRepository = roomRepository;
+        this.allocationRepository = allocationRepository;
     }
 
     // ---------------- SAMPLE DATA ----------------
@@ -264,7 +293,7 @@ public class PatientPortalModel {
         String search = query == null
                 ? "" : query.trim().toLowerCase();
 
-        for (DoctorInfo d : doctors) {
+        for (DoctorInfo d : getDoctors()) {
 
             if (d.doctorId.toLowerCase().contains(search)
                     || d.name.toLowerCase().contains(search)
@@ -279,6 +308,22 @@ public class PatientPortalModel {
     }
 
     public List<DoctorInfo> getDoctors() {
+        if (staffRepository != null) {
+            List<DoctorInfo> result = new ArrayList<>();
+            for (Doctor doctor : staffRepository.findAllDoctors()) {
+                DoctorWorkspaceModel.Availability availability =
+                        getAvailability(doctor.getUserId());
+                result.add(new DoctorInfo(
+                        doctor.getUserId(),
+                        doctor.getName(),
+                        valueOrDefault(doctor.getSpecialization(), "Not specified"),
+                        valueOrDefault(doctor.getDesignation(), "Medical"),
+                        availability == null ? "Not set" : availability.availableDays,
+                        availability == null ? "Not set" : availability.availableTime
+                ));
+            }
+            return result;
+        }
         return new ArrayList<>(doctors);
     }
 
@@ -293,7 +338,7 @@ public class PatientPortalModel {
 
         boolean doctorExists = false;
 
-        for (DoctorInfo d : doctors) {
+        for (DoctorInfo d : getDoctors()) {
             if (d.doctorId.equalsIgnoreCase(doctorId)) {
                 doctorExists = true;
                 break;
@@ -352,6 +397,22 @@ public class PatientPortalModel {
 
         List<Treatment> result = new ArrayList<>();
 
+        if (doctorWorkspaceModel != null) {
+            for (DoctorWorkspaceModel.Diagnosis diagnosis
+                    : doctorWorkspaceModel.getDiagnoses(patientId)) {
+                Treatment treatment = new Treatment(
+                        diagnosis.diagnosisId,
+                        diagnosis.patientId,
+                        diagnosis.doctorId,
+                        diagnosis.diagnosis,
+                        diagnosis.notes
+                );
+                treatment.date = diagnosis.date;
+                result.add(treatment);
+            }
+            return result;
+        }
+
         for (Treatment t : treatments) {
             if (t.patientId.equalsIgnoreCase(patientId)) {
                 result.add(t);
@@ -366,6 +427,25 @@ public class PatientPortalModel {
     public List<Medicine> getMedicines(String patientId) {
 
         List<Medicine> result = new ArrayList<>();
+
+        if (doctorWorkspaceModel != null) {
+            for (DoctorWorkspaceModel.Prescription prescription
+                    : doctorWorkspaceModel.getPrescriptions(patientId)) {
+                Medicine medicine = new Medicine(
+                        prescription.prescriptionId,
+                        prescription.patientId,
+                        prescription.doctorId,
+                        prescription.medicine,
+                        prescription.dosage,
+                        prescription.frequency,
+                        prescription.duration,
+                        prescription.instructions
+                );
+                medicine.date = prescription.date;
+                result.add(medicine);
+            }
+            return result;
+        }
 
         for (Medicine m : medicines) {
             if (m.patientId.equalsIgnoreCase(patientId)) {
@@ -382,6 +462,22 @@ public class PatientPortalModel {
 
         List<MedicalReport> result = new ArrayList<>();
 
+        if (doctorWorkspaceModel != null) {
+            for (DoctorWorkspaceModel.TreatmentReport report
+                    : doctorWorkspaceModel.getReports(patientId)) {
+                MedicalReport medicalReport = new MedicalReport(
+                        report.reportId,
+                        report.patientId,
+                        report.title,
+                        report.date,
+                        report.content
+                );
+                medicalReport.status = report.status;
+                result.add(medicalReport);
+            }
+            return result;
+        }
+
         for (MedicalReport r : reports) {
             if (r.patientId.equalsIgnoreCase(patientId)) {
                 result.add(r);
@@ -394,10 +490,9 @@ public class PatientPortalModel {
     public MedicalReport getReport(String reportId,
                                    String patientId) {
 
-        for (MedicalReport r : reports) {
+        for (MedicalReport r : getReports(patientId)) {
 
-            if (r.reportId.equalsIgnoreCase(reportId)
-                    && r.patientId.equalsIgnoreCase(patientId)) {
+            if (r.reportId.equalsIgnoreCase(reportId)) {
                 return r;
             }
         }
@@ -411,6 +506,28 @@ public class PatientPortalModel {
 
         List<Bill> result = new ArrayList<>();
 
+        if (billRepository != null) {
+            for (org.hosp1.billing.model.Bill bill
+                    : billRepository.findByPatientId(patientId)) {
+                StringBuilder description = new StringBuilder();
+                for (org.hosp1.billing.model.BillItem item : bill.getItems()) {
+                    if (description.length() > 0) {
+                        description.append(", ");
+                    }
+                    description.append(item.getDescription());
+                }
+                result.add(new Bill(
+                        bill.getId(),
+                        bill.getPatientId(),
+                        description.toString(),
+                        bill.getTotal().doubleValue()
+                ));
+                result.get(result.size() - 1).date = bill.getIssuedDate().toString();
+                result.get(result.size() - 1).status = bill.getStatus().toString();
+            }
+            return result;
+        }
+
         for (Bill b : bills) {
             if (b.patientId.equalsIgnoreCase(patientId)) {
                 result.add(b);
@@ -422,6 +539,10 @@ public class PatientPortalModel {
 
     public boolean submitPaymentRequest(
             String billId, String patientId) {
+
+        if (billRepository != null) {
+            return false;
+        }
 
         for (Bill b : bills) {
 
@@ -440,6 +561,23 @@ public class PatientPortalModel {
     // ---------------- ROOM AVAILABILITY ----------------
 
     public List<RoomInfo> getRooms() {
+        if (roomRepository != null) {
+            List<RoomInfo> result = new ArrayList<>();
+            for (org.hosp1.facility.model.Room room : roomRepository.findAll()) {
+                int occupied = allocationRepository == null
+                        ? 0
+                        : allocationRepository.countActiveByRoomId(room.getId());
+                int available = Math.max(0, room.getCapacity() - occupied);
+                result.add(new RoomInfo(
+                        room.getId(),
+                        roomTypeLabel(room.getType().name()),
+                        "Not specified",
+                        available,
+                        available > 0 ? "Available" : "Full"
+                ));
+            }
+            return result;
+        }
         return new ArrayList<>(rooms);
     }
 
@@ -447,7 +585,7 @@ public class PatientPortalModel {
 
         List<RoomInfo> result = new ArrayList<>();
 
-        for (RoomInfo r : rooms) {
+        for (RoomInfo r : getRooms()) {
 
             if (roomType == null
                     || roomType.trim().isEmpty()
@@ -459,6 +597,32 @@ public class PatientPortalModel {
         }
 
         return result;
+    }
+
+    private DoctorWorkspaceModel.Availability getAvailability(String doctorId) {
+        if (doctorWorkspaceModel == null) {
+            return null;
+        }
+        for (DoctorWorkspaceModel.Availability availability
+                : doctorWorkspaceModel.getAvailabilities()) {
+            if (availability.doctorId.equalsIgnoreCase(doctorId)) {
+                return availability;
+            }
+        }
+        return null;
+    }
+
+    private static String valueOrDefault(String value, String fallback) {
+        return value == null || value.isBlank() ? fallback : value;
+    }
+
+    private static String roomTypeLabel(String type) {
+        return switch (type) {
+            case "GENERAL_WARD" -> "General";
+            case "PRIVATE" -> "Private";
+            case "ICU" -> "ICU";
+            default -> type.replace('_', ' ');
+        };
     }
 
     // ---------------- FEEDBACK ----------------
@@ -511,7 +675,7 @@ public class PatientPortalModel {
         String search = query == null
                 ? "" : query.trim().toLowerCase();
 
-        for (MedicalReport r : reports) {
+        for (MedicalReport r : getReports(patientId)) {
 
             if (r.patientId.equalsIgnoreCase(patientId)
                     && (r.reportId.toLowerCase().contains(search)
@@ -600,10 +764,14 @@ public class PatientPortalModel {
     }
 
     public List<Object[]> reportRows(String patientId) {
+        return reportRows(getReports(patientId));
+    }
+
+    public List<Object[]> reportRows(List<MedicalReport> reports) {
 
         List<Object[]> rows = new ArrayList<>();
 
-        for (MedicalReport r : getReports(patientId)) {
+        for (MedicalReport r : reports) {
             rows.add(new Object[]{
                     r.reportId,
                     r.reportName,

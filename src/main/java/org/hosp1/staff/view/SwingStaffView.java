@@ -1,7 +1,7 @@
 
 package org.hosp1.staff.view;
 
-import org.hosp1.staff.model.StaffMember;
+import org.hosp1.staff.model.Staff;
 
 import javax.swing.*;
 import java.awt.*;
@@ -11,9 +11,10 @@ public class SwingStaffView extends JPanel {
     private final JLabel id = new JLabel();
     private final JLabel name = new JLabel();
     private final JLabel designation = new JLabel();
-    private final JLabel department = new JLabel();
-    private final JLabel shift = new JLabel();
-    private final JLabel status = new JLabel();
+    private final JLabel qualification = new JLabel();
+    private final JLabel joiningDate = new JLabel();
+    private final JLabel salary = new JLabel();
+    private final JLabel role = new JLabel();
 
     private final JTextField phone = new JTextField(20);
     private final JTextField email = new JTextField(20);
@@ -21,7 +22,7 @@ public class SwingStaffView extends JPanel {
 
     private final JTextArea schedule = new JTextArea(5, 30);
 
-    private StaffMember currentStaff;
+    private Staff currentStaff;
 
     public interface ActionHandler {
         void onAction(String action);
@@ -46,6 +47,10 @@ public class SwingStaffView extends JPanel {
         tabs.addTab("My Schedule", schedulePanel());
 
         add(tabs, BorderLayout.CENTER);
+
+        JButton logout = new JButton("Logout");
+        logout.addActionListener(e -> handler.onAction("staff.logout"));
+        add(logout, BorderLayout.SOUTH);
     }
 
     private JPanel profilePanel() {
@@ -61,9 +66,10 @@ public class SwingStaffView extends JPanel {
         addLabel(panel, "Staff ID:", id);
         addLabel(panel, "Name:", name);
         addLabel(panel, "Designation:", designation);
-        addLabel(panel, "Department:", department);
-        addLabel(panel, "Shift:", shift);
-        addLabel(panel, "Employment Status:", status);
+        addLabel(panel, "Role:", role);
+        addLabel(panel, "Qualification:", qualification);
+        addLabel(panel, "Joining Date:", joiningDate);
+        addLabel(panel, "Salary:", salary);
 
         panel.add(new JLabel("Phone:"));
         panel.add(phone);
@@ -113,23 +119,25 @@ public class SwingStaffView extends JPanel {
         panel.add(value);
     }
 
-    public void setProfile(StaffMember staff) {
+    public void setProfile(Staff staff) {
 
         currentStaff = staff;
 
-        id.setText(staff.getStaffId());
+        id.setText(Integer.toString(staff.getStaffId()));
         name.setText(staff.getName());
         designation.setText(staff.getDesignation());
-        department.setText(staff.getDepartment());
-        shift.setText(staff.getShift());
-        status.setText(staff.getStatus());
+        role.setText(staff.getRole());
+        qualification.setText(staff.getQualification());
+        joiningDate.setText(staff.getJoiningDate() == null
+                ? "Not specified" : staff.getJoiningDate().toString());
+        salary.setText(String.format("%.2f", staff.getSalary()));
 
         phone.setText(staff.getPhone());
         email.setText(staff.getEmail());
         address.setText(staff.getAddress());
     }
 
-    public StaffMember getCurrentStaff() {
+    public Staff getCurrentStaff() {
         return currentStaff;
     }
 

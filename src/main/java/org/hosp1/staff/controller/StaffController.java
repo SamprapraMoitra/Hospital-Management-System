@@ -1,24 +1,22 @@
 
 package org.hosp1.staff.controller;
 
-import org.hosp1.staff.model.StaffManagementModel;
-import org.hosp1.staff.model.StaffMember;
+import org.hosp1.staff.model.Staff;
+import org.hosp1.staff.model.StaffRepository;
 import org.hosp1.staff.view.SwingStaffView;
-
-import java.util.List;
 
 public class StaffController {
 
-    private final StaffManagementModel model;
+    private final StaffRepository repository;
     private final SwingStaffView view;
     private final String loggedInStaffId;
 
     public StaffController(
-            StaffManagementModel model,
+            StaffRepository repository,
             SwingStaffView view,
             String staffId) {
 
-        this.model = model;
+        this.repository = repository;
         this.view = view;
         this.loggedInStaffId = staffId;
 
@@ -61,8 +59,7 @@ public class StaffController {
 
     private void loadProfile() {
 
-        StaffMember staff =
-                model.getStaffById(loggedInStaffId);
+        Staff staff = repository.findById(loggedInStaffId).orElse(null);
 
         if (staff == null) {
             throw new IllegalArgumentException(
@@ -77,18 +74,11 @@ public class StaffController {
 
     private void updateContact() {
 
-        StaffMember staff =
-                model.getStaffById(loggedInStaffId);
+        Staff staff = repository.findById(loggedInStaffId).orElse(null);
 
         if (staff == null) {
             throw new IllegalArgumentException(
                     "Staff account not found."
-            );
-        }
-
-        if (!"Active".equals(staff.getStatus())) {
-            throw new IllegalArgumentException(
-                    "Inactive staff cannot update their profile."
             );
         }
 
@@ -111,10 +101,9 @@ public class StaffController {
             );
         }
 
-        for (StaffMember other : model.getAllStaff()) {
-
-            if (!other.getStaffId().equalsIgnoreCase(loggedInStaffId)
-                    && other.getPhone().equals(phone)) {
+        for (Staff other : repository.findAll()) {
+            if (!other.getUserId().equalsIgnoreCase(loggedInStaffId)
+                    && phone.equals(other.getPhone())) {
 
                 throw new IllegalArgumentException(
                         "Phone number already belongs to another staff member."
@@ -122,60 +111,26 @@ public class StaffController {
             }
         }
 
-        boolean updated = model.updateStaff(
-                staff.getStaffId(),
-                staff.getName(),
-                staff.getGender(),
-                staff.getDateOfBirth(),
-                phone,
-                email,
-                address,
-                staff.getDesignation(),
-                staff.getDepartment(),
-                staff.getQualification(),
-                staff.getJoiningDate(),
-                staff.getShift(),
-                staff.getSalary(),
-                staff.getUsername()
-        );
-
-        if (updated) {
-
-            loadProfile();
-
-            view.showMessage(
-                    "Contact information updated successfully."
+        if (!email.isEmpty() && repository.findByEmail(email)
+                .filter(existing -> !existing.getUserId().equalsIgnoreCase(loggedInStaffId))
+                .isPresent()) {
+            throw new IllegalArgumentException(
+                    "Email address already belongs to another staff member."
             );
         }
+
+        staff.setPhone(phone);
+        staff.setEmail(email);
+        staff.setAddress(address);
+        repository.save(staff);
+
+        loadProfile();
+        view.showMessage("Contact information updated successfully.");
     }
 
     // ---------------- ATTENDANCE ----------------
 
     private void loadAttendance() {
-
-        List<String[]> records =
-                model.getAttendance(loggedInStaffId);
-
-        StringBuilder result = new StringBuilder();
-
-        result.append("MY ATTENDANCE HISTORY\n\n");
-
-        if (records.isEmpty()) {
-
-            result.append("No attendance records available.");
-
-        } else {
-
-            for (String[] record : records) {
-
-                result.append("Date: ")
-                        .append(record[1])
-                        .append(" | Status: ")
-                        .append(record[2])
-                        .append("\n");
-            }
-        }
-
-        view.setSchedule(result.toString());
+        view.setSchedule("Attendance records are not available yet.");
     }
 }

@@ -5,7 +5,7 @@ import org.hosp1.common.view.UiActionListener;
 import org.hosp1.staff.model.DoctorWorkspaceModel;
 import org.hosp1.staff.model.DoctorWorkspaceModel.*;
 
-import org.hosp1.staff.view.SwingDoctorWorkspaceView;
+import org.hosp1.staff.view.DoctorView;
 
 import javax.swing.*;
 import java.util.ArrayList;
@@ -15,26 +15,13 @@ import java.util.Map;
 public class DoctorController implements UiActionListener {
 
     private final DoctorWorkspaceModel model;
-    private final SwingDoctorWorkspaceView view;
-
-    // Optional bridge to Billing and Facility Controllers
-    private final UiActionListener moduleBridge;
+    private final DoctorView view;
 
     public DoctorController(
             DoctorWorkspaceModel model,
-            SwingDoctorWorkspaceView view) {
-
-        this(model, view, null);
-    }
-
-    public DoctorController(
-            DoctorWorkspaceModel model,
-            SwingDoctorWorkspaceView view,
-            UiActionListener moduleBridge) {
-
+            DoctorView view) {
         this.model = model;
         this.view = view;
-        this.moduleBridge = moduleBridge;
     }
 
     // ---------------- ACTION HANDLER ----------------
@@ -92,14 +79,6 @@ public class DoctorController implements UiActionListener {
 
                 case "doctorWorkspace.reportUpdate":
                     updateReport(data);
-                    break;
-
-                case "doctorWorkspace.billingRequest":
-                    createBillingRequest(data);
-                    break;
-
-                case "doctorWorkspace.facilityRequest":
-                    createFacilityRequest(data);
                     break;
 
                 default:
@@ -419,93 +398,6 @@ public class DoctorController implements UiActionListener {
 
         view.showMessage(
                 "Treatment report updated successfully."
-        );
-    }
-
-    // ---------------- BILLING OPERATIONS ----------------
-
-    private void createBillingRequest(Map<String, Object> data) {
-
-        String patientId = get(data, "patientId");
-        String doctorId = get(data, "doctorId");
-        String description = get(data, "description");
-
-        double amount;
-
-        try {
-            amount = Double.parseDouble(get(data, "amount"));
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException(
-                    "Enter a valid billing amount."
-            );
-        }
-
-        BillingRequest request =
-                model.createBillingRequest(
-                        patientId,
-                        doctorId,
-                        description,
-                        amount
-                );
-
-        // Forward the request to the Billing module if connected.
-        if (moduleBridge != null) {
-
-            moduleBridge.onAction(
-                    "billing.doctorChargeRequest",
-                    org.hosp1.common.view.UiActions.data(
-                            "requestId", request.requestId,
-                            "patientId", patientId,
-                            "doctorId", doctorId,
-                            "description", description,
-                            "amount", amount
-                    )
-            );
-        }
-
-        view.showMessage(
-                "Billing request created successfully!\n"
-                        + "Request ID: " + request.requestId
-                        + "\nStatus: Pending"
-        );
-    }
-
-    // ---------------- FACILITY OPERATIONS ----------------
-
-    private void createFacilityRequest(Map<String, Object> data) {
-
-        String patientId = get(data, "patientId");
-        String doctorId = get(data, "doctorId");
-        String roomType = get(data, "roomType");
-        String reason = get(data, "reason");
-
-        FacilityRequest request =
-                model.createFacilityRequest(
-                        patientId,
-                        doctorId,
-                        roomType,
-                        reason
-                );
-
-        // Forward the request to the Facility module if connected.
-        if (moduleBridge != null) {
-
-            moduleBridge.onAction(
-                    "facility.doctorRoomRequest",
-                    org.hosp1.common.view.UiActions.data(
-                            "requestId", request.requestId,
-                            "patientId", patientId,
-                            "doctorId", doctorId,
-                            "roomType", roomType,
-                            "reason", reason
-                    )
-            );
-        }
-
-        view.showMessage(
-                "Facility request created successfully!\n"
-                        + "Request ID: " + request.requestId
-                        + "\nStatus: Pending"
         );
     }
 

@@ -45,7 +45,7 @@ public class SwingPatientBillingView implements PatientBillingView {
         frame.add(top, BorderLayout.NORTH);
         frame.add(new JScrollPane(table), BorderLayout.CENTER);
         frame.add(bottom, BorderLayout.SOUTH);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         frame.setSize(720, 420);
         frame.setLocationRelativeTo(null);
     }

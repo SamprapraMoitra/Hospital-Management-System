@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import org.hosp1.common.model.User;
 
 public class Staff extends User {
+
     private int staffId;
     private LocalDate joiningDate;
     private String designation;
@@ -14,9 +15,12 @@ public class Staff extends User {
     public Staff() {
         super();
     }
-    public Staff(String userId, String name, String email, String phone, String gender,String address,String role,String passwordHash,
-                   int staffId, LocalDate joiningDate, String designation,double salary,String qualification) {
-        super(userId, name, email, phone, gender,address,role,passwordHash);
+
+    public Staff(String userId, String name, String email, String phone,
+                 String gender, String address, String role, String passwordHash,
+                 int staffId, LocalDate joiningDate, String designation,
+                 double salary, String qualification) {
+        super(userId, name, email, phone, gender, address, role, passwordHash);
         this.staffId = staffId;
         this.joiningDate = joiningDate;
         this.designation = designation;
@@ -66,6 +70,7 @@ public class Staff extends User {
 
     @Override
     public String toString() {
-        return "Staff{ staffId =" + staffId + ", designation='" + designation +  "'}";
+        return "Staff{id=" + getUserId() + ", name='" + getName()
+                + "', staffId=" + staffId + ", designation='" + designation + "'}";
     }
 }

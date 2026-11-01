@@ -6,7 +6,7 @@ import org.hosp1.common.view.UiActions;
 import org.hosp1.patients.model.PatientPortalModel;
 import org.hosp1.patients.model.PatientPortalModel.*;
 
-import org.hosp1.patients.view.SwingPatientPortalView;
+import org.hosp1.patients.view.PatientPortalView;
 
 import javax.swing.*;
 import java.time.LocalDate;
@@ -17,26 +17,37 @@ import java.util.Map;
 public class PatientController implements UiActionListener {
 
     private final PatientPortalModel model;
-    private final SwingPatientPortalView view;
+    private final PatientPortalView view;
 
     // Optional connection to other HMS module controllers
     private final UiActionListener moduleBridge;
+    private final String authenticatedPatientId;
 
     public PatientController(
             PatientPortalModel model,
-            SwingPatientPortalView view) {
+            PatientPortalView view) {
 
-        this(model, view, null);
+        this(model, view, null, null);
     }
 
     public PatientController(
             PatientPortalModel model,
-            SwingPatientPortalView view,
+            PatientPortalView view,
             UiActionListener moduleBridge) {
+
+        this(model, view, moduleBridge, null);
+    }
+
+    public PatientController(
+            PatientPortalModel model,
+            PatientPortalView view,
+            UiActionListener moduleBridge,
+            String authenticatedPatientId) {
 
         this.model = model;
         this.view = view;
         this.moduleBridge = moduleBridge;
+        this.authenticatedPatientId = authenticatedPatientId;
     }
 
     // ---------------- ACTION HANDLER ----------------
@@ -72,10 +83,6 @@ public class PatientController implements UiActionListener {
 
                 case "patientPortal.treatmentList":
                     loadTreatments(data);
-                    break;
-
-                case "patientPortal.medicineList":
-                    loadMedicines(data);
                     break;
 
                 case "patientPortal.reportList":
@@ -286,21 +293,6 @@ public class PatientController implements UiActionListener {
         view.setStatus("Treatment history loaded.");
     }
 
-    // ---------------- MEDICINES ----------------
-
-    private void loadMedicines(Map<String, Object> data) {
-
-        String patientId = get(data, "patientId");
-
-        validatePatientId(patientId);
-
-        view.setMedicineRows(
-                model.medicineRows(patientId)
-        );
-
-        view.setStatus("Prescription information loaded.");
-    }
-
     // ---------------- MEDICAL REPORTS ----------------
 
     private void loadReports(Map<String, Object> data) {
@@ -496,6 +488,10 @@ public class PatientController implements UiActionListener {
     private String get(
             Map<String, Object> data,
             String key) {
+
+        if ("patientId".equals(key) && authenticatedPatientId != null) {
+            return authenticatedPatientId;
+        }
 
         Object value = data.get(key);
 

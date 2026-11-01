@@ -16,6 +16,7 @@ public class PatientPortalView extends JPanel {
     private final UiActionListener listener;
 
     private final JTextField patientId = UiStyle.textField(15);
+    private final JLabel patientIdentity = new JLabel();
 
     private final JTextField doctorSearch = UiStyle.textField(16);
     private final JTable doctorTable = UiStyle.table(
@@ -36,11 +37,6 @@ public class PatientPortalView extends JPanel {
     private final JTable treatmentTable = UiStyle.table(
             "Treatment ID", "Doctor ID", "Date",
             "Diagnosis", "Notes"
-    );
-
-    private final JTable medicineTable = UiStyle.table(
-            "Prescription ID", "Doctor ID", "Medicine",
-            "Dosage", "Frequency", "Duration", "Instructions"
     );
 
     private final JTextField documentSearch = UiStyle.textField(16);
@@ -89,7 +85,7 @@ public class PatientPortalView extends JPanel {
     private final JLabel status =
             new JLabel("Patient portal ready.");
 
-    public SwingPatientPortalView(UiActionListener listener) {
+    public PatientPortalView(UiActionListener listener) {
 
         this.listener = listener;
 
@@ -104,7 +100,6 @@ public class PatientPortalView extends JPanel {
         tabs.addTab("Search Doctors", doctorPanel());
         tabs.addTab("Appointments", appointmentPanel());
         tabs.addTab("Treatment", treatmentPanel());
-        tabs.addTab("Medicines", medicinePanel());
         tabs.addTab("Medical Reports", reportPanel());
         tabs.addTab("Payments", billingPanel());
         tabs.addTab("Room Availability", roomPanel());
@@ -146,34 +141,18 @@ public class PatientPortalView extends JPanel {
         panel.add(subtitle);
         panel.add(Box.createVerticalStrut(12));
 
-        JPanel idPanel = new JPanel(
-                new FlowLayout(FlowLayout.LEFT)
+        JPanel identityPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        identityPanel.setOpaque(false);
+        identityPanel.add(new JLabel("Signed in as:"));
+        identityPanel.add(patientIdentity);
+
+        JButton logout = UiStyle.secondaryButton("Logout");
+        logout.addActionListener(e ->
+                UiActions.send(listener, "patientPortal.logout", UiActions.data())
         );
+        identityPanel.add(logout);
 
-        idPanel.setOpaque(false);
-
-        idPanel.add(new JLabel("Patient ID:"));
-        idPanel.add(patientId);
-
-        JButton setId = UiStyle.primaryButton("Set Patient ID");
-
-        setId.addActionListener(e -> {
-
-            if (patientId.getText().trim().isEmpty()) {
-                message("Enter your Patient ID.");
-                return;
-            }
-
-            status.setText(
-                    "Current Patient: " + patientId.getText().trim()
-            );
-
-            refreshAll();
-        });
-
-        idPanel.add(setId);
-
-        panel.add(idPanel);
+        panel.add(identityPanel);
 
         return panel;
     }
@@ -190,6 +169,16 @@ public class PatientPortalView extends JPanel {
 
     private String patient() {
         return patientId.getText().trim();
+    }
+
+    public void setPatientIdentity(String id, String name) {
+        patientId.setText(id);
+        patientIdentity.setText(name + " (" + id + ")");
+        status.setText("Signed in as " + name + ".");
+        refreshAll();
+        UiActions.send(listener, "patientPortal.doctorList", UiActions.data());
+        UiActions.send(listener, "patientPortal.roomSearch",
+                UiActions.data("roomType", "All"));
     }
 
     // ---------------- DOCTOR SEARCH ----------------
@@ -368,30 +357,6 @@ public class PatientPortalView extends JPanel {
         return panel;
     }
 
-    // ---------------- MEDICINE PANEL ----------------
-
-    private JPanel medicinePanel() {
-
-        JPanel panel = UiStyle.card();
-
-        JButton load = UiStyle.primaryButton("View Prescribed Medicines");
-
-        load.addActionListener(e -> {
-
-            if (!validPatientId()) return;
-
-            UiActions.send(listener,
-                    "patientPortal.medicineList",
-                    UiActions.data("patientId", patient())
-            );
-        });
-
-        panel.add(load, BorderLayout.NORTH);
-        panel.add(UiStyle.scroll(medicineTable), BorderLayout.CENTER);
-
-        return panel;
-    }
-
     // ---------------- REPORT PANEL ----------------
 
     private JPanel reportPanel() {
@@ -491,7 +456,7 @@ public class PatientPortalView extends JPanel {
         top.setOpaque(false);
 
         JButton load = UiStyle.primaryButton("View My Bills");
-        JButton pay = UiStyle.secondaryButton("Request Payment");
+        JButton pay = UiStyle.secondaryButton("Open Payment Screen");
 
         top.add(load);
         top.add(pay);
@@ -514,8 +479,8 @@ public class PatientPortalView extends JPanel {
 
             int choice = JOptionPane.showConfirmDialog(
                     this,
-                    "Submit a payment request for bill " + id + "?",
-                    "Payment confirmation",
+                    "Open the secure payment screen for bill " + id + "?",
+                    "Open payment screen",
                     JOptionPane.YES_NO_OPTION
             );
 
@@ -669,7 +634,6 @@ public class PatientPortalView extends JPanel {
         UiStyle.styleTable(doctorTable);
         UiStyle.styleTable(appointmentTable);
         UiStyle.styleTable(treatmentTable);
-        UiStyle.styleTable(medicineTable);
         UiStyle.styleTable(reportTable);
         UiStyle.styleTable(billTable);
         UiStyle.styleTable(roomTable);
@@ -715,17 +679,17 @@ public class PatientPortalView extends JPanel {
         );
 
         UiActions.send(listener,
-                "patientPortal.medicineList",
-                UiActions.data("patientId", patient())
-        );
-
-        UiActions.send(listener,
                 "patientPortal.reportList",
                 UiActions.data("patientId", patient())
         );
 
         UiActions.send(listener,
                 "patientPortal.billList",
+                UiActions.data("patientId", patient())
+        );
+
+        UiActions.send(listener,
+                "patientPortal.feedbackList",
                 UiActions.data("patientId", patient())
         );
     }
@@ -742,10 +706,6 @@ public class PatientPortalView extends JPanel {
 
     public void setTreatmentRows(List<Object[]> rows) {
         setRows(treatmentTable, rows);
-    }
-
-    public void setMedicineRows(List<Object[]> rows) {
-        setRows(medicineTable, rows);
     }
 
     public void setReportRows(List<Object[]> rows) {
